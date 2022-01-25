@@ -79,10 +79,7 @@ class tri_list {
 
         value_type operator*() const noexcept {
             if (std::holds_alternative<T1>(*it)) {
-                auto temp = (*T1_modifier_ptr)(std::get<T1>(*it));
-                variant_t v = {temp};
-//                std::cout << std::get<T1>(v) << std::endl;
-                return v;
+                return variant_t((*T1_modifier_ptr)(std::get<T1>(*it)));
             }
             else if (std::holds_alternative<T2>(*it)) {
                 return variant_t((*T2_modifier_ptr)(std::get<T2>(*it)));
