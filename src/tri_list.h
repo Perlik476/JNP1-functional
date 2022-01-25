@@ -72,12 +72,28 @@ public:
 
     template <typename T>
     void reset() {
-
+        if (std::is_same_v<T, T1>) {
+            T1_modifier = identity<T1>;
+        }
+        else if (std::is_same_v<T, T2>) {
+            T2_modifier = identity<T2>;
+        }
+        else if (std::is_same_v<T, T3>) {
+            T3_modifier = identity<T3>;
+        }
     }
 
     template <typename T, modifier<T> F>
     void modify_only(F f = F{}) {
-
+        if (std::is_same_v<T, T1>) {
+            T1_modifier = compose<T>(f, T1_modifier);
+        }
+        else if (std::is_same_v<T, T2>) {
+            T2_modifier = compose<T>(f, T2_modifier);
+        }
+        else if (std::is_same_v<T, T3>) {
+            T3_modifier = compose<T>(f, T3_modifier);
+        }
     }
 };
 
