@@ -163,13 +163,13 @@ public:
 
     template <typename T, modifier<T> F>
     void modify_only(F f = F{}) {
-        if (std::is_same_v<T, T1>) {
+        if constexpr (std::is_same<T, T1>::value) {
             *T1_modifier_ptr = compose<T>(f, *T1_modifier_ptr);
         }
-        else if (std::is_same_v<T, T2>) {
+        else if constexpr (std::is_same<T, T2>::value) {
             *T2_modifier_ptr = compose<T>(f, *T2_modifier_ptr);
         }
-        else if (std::is_same_v<T, T3>) {
+        else if constexpr (std::is_same<T, T3>::value) {
             *T3_modifier_ptr = compose<T>(f, *T3_modifier_ptr);
         }
     }
