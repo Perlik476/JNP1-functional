@@ -116,6 +116,12 @@ class tri_list {
         }
     };
 
+    template<typename T>
+    void check_Ts_not_same() {
+        int constexpr cnt = std::same_as<T, T1> + std::same_as<T, T2> + std::same_as<T, T3>;
+        static_assert(cnt <= 1);
+    }
+
 public:
 
     tri_list() = default;
@@ -124,6 +130,7 @@ public:
 
     template<class T>
     auto range_over() {
+        check_Ts_not_same<T>();
         auto result = list
             | std::views::filter([](variant_t element) {
                 return std::holds_alternative<T>(element);
@@ -145,11 +152,13 @@ public:
 
     template <typename T>
     void push_back(const T& t) {
+        check_Ts_not_same<T>();
         list.push_back(t);
     }
 
     template <typename T>
     void reset() {
+        check_Ts_not_same<T>();
         if (std::is_same_v<T, T1>) {
             *T1_modifier_ptr = identity<T1>;
         }
@@ -163,6 +172,7 @@ public:
 
     template <typename T, modifier<T> F>
     void modify_only(F f = F{}) {
+        check_Ts_not_same<T>();
         if constexpr (std::is_same<T, T1>::value) {
             *T1_modifier_ptr = compose<T>(f, *T1_modifier_ptr);
         }
