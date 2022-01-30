@@ -49,25 +49,23 @@ class tri_list {
     fun_T3_ptr T3_modifier_ptr = std::make_shared<fun_T3_t>(identity<T3>);
 
     class tri_iterator {
-        typename std::vector<variant_t>::iterator it;
+        typename std::vector<variant_t>::const_iterator it;
 
         fun_T1_ptr T1_modifier_ptr;
         fun_T2_ptr T2_modifier_ptr;
         fun_T3_ptr T3_modifier_ptr;
     public:
         using iterator_category = std::bidirectional_iterator_tag;
-        using difference_type = std::iter_difference_t<typename list_t::iterator>;
+        using difference_type = std::iter_difference_t<typename list_t::const_iterator>;
         using value_type = variant_t;
         using reference = const variant_t &;
         using pointer = variant_t *;
 
         tri_iterator() noexcept = default;
-        /*explicit */
-        tri_iterator(const typename list_t::iterator &i, const fun_T1_ptr &T1_ptr, const fun_T2_ptr &T2_ptr,
+
+        tri_iterator(const typename list_t::const_iterator &i, const fun_T1_ptr &T1_ptr, const fun_T2_ptr &T2_ptr,
                      const fun_T3_ptr &T3_ptr) : it(i), T1_modifier_ptr(T1_ptr), T2_modifier_ptr(T2_ptr),
                      T3_modifier_ptr(T3_ptr) {}
-
-//        children_iterator(const children_iterator &other) noexcept : it(other.it) {}
 
         bool operator==(const tri_iterator &other) const noexcept {
             return (this->it == other.it);
@@ -88,10 +86,6 @@ class tri_list {
                 return variant_t((*T3_modifier_ptr)(std::get<T3>(*it)));
             }
         }
-
-//        pointer operator->() noexcept {
-//            return &(*it);
-//        }
 
         tri_iterator &operator++() noexcept {
             it++;
@@ -117,7 +111,7 @@ class tri_list {
     };
 
     template<typename T>
-    void check_Ts_not_same() {
+    void check_Ts_not_same() const {
         int constexpr cnt = std::same_as<T, T1> + std::same_as<T, T2> + std::same_as<T, T3>;
         static_assert(cnt == 1);
     }
@@ -129,7 +123,7 @@ public:
     tri_list(std::initializer_list<variant_t> list) : list(list) {}
 
     template<class T>
-    auto range_over() {
+    auto range_over() const {
         check_Ts_not_same<T>();
         auto result = list
             | std::views::filter([](variant_t element) {
@@ -184,11 +178,12 @@ public:
         }
     }
 
-    tri_iterator begin() {
+    tri_iterator begin() const {
+//        const typename list_t::iterator &it = list.begin();
         return tri_iterator(list.begin(), T1_modifier_ptr, T2_modifier_ptr, T3_modifier_ptr);
     }
 
-    tri_iterator end() {
+    tri_iterator end() const {
         return tri_iterator(list.end(), T1_modifier_ptr, T2_modifier_ptr, T3_modifier_ptr);
     }
 };
