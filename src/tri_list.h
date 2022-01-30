@@ -119,7 +119,7 @@ class tri_list {
     template<typename T>
     void check_Ts_not_same() {
         int constexpr cnt = std::same_as<T, T1> + std::same_as<T, T2> + std::same_as<T, T3>;
-        static_assert(cnt <= 1);
+        static_assert(cnt == 1);
     }
 
 public:
