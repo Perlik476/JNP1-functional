@@ -12,7 +12,6 @@
 #include <ranges>
 #include <limits>
 #include <iterator>
-#include <ranges>
 #include <functional>
 #include <memory>
 #include "tri_list_concepts.h"
@@ -34,26 +33,26 @@ class tri_list {
     using variant_t = std::variant<T1, T2, T3>;
     using list_t = std::vector<variant_t>;
 
-    using fun_T1_t = std::function<T1(T1)>;
-    using fun_T2_t = std::function<T2(T2)>;
-    using fun_T3_t = std::function<T3(T3)>;
+    using fun_t1_t = std::function<T1(T1)>;
+    using fun_t2_t = std::function<T2(T2)>;
+    using fun_t3_t = std::function<T3(T3)>;
 
-    using fun_T1_ptr = std::shared_ptr<fun_T1_t>;
-    using fun_T2_ptr = std::shared_ptr<fun_T2_t>;
-    using fun_T3_ptr = std::shared_ptr<fun_T3_t>;
+    using fun_t1_ptr = std::shared_ptr<fun_t1_t>;
+    using fun_t2_ptr = std::shared_ptr<fun_t2_t>;
+    using fun_t3_ptr = std::shared_ptr<fun_t3_t>;
 
     list_t list;
 
-    fun_T1_ptr T1_modifier_ptr = std::make_shared<fun_T1_t>(identity<T1>);
-    fun_T2_ptr T2_modifier_ptr = std::make_shared<fun_T2_t>(identity<T2>);
-    fun_T3_ptr T3_modifier_ptr = std::make_shared<fun_T3_t>(identity<T3>);
+    fun_t1_ptr t1_modifier_ptr = std::make_shared<fun_t1_t>(identity<T1>);
+    fun_t2_ptr t2_modifier_ptr = std::make_shared<fun_t2_t>(identity<T2>);
+    fun_t3_ptr t3_modifier_ptr = std::make_shared<fun_t3_t>(identity<T3>);
 
     class tri_iterator {
         typename std::vector<variant_t>::const_iterator it;
 
-        fun_T1_ptr T1_modifier_ptr;
-        fun_T2_ptr T2_modifier_ptr;
-        fun_T3_ptr T3_modifier_ptr;
+        fun_t1_ptr T1_modifier_ptr;
+        fun_t2_ptr T2_modifier_ptr;
+        fun_t3_ptr T3_modifier_ptr;
     public:
         using iterator_category = std::bidirectional_iterator_tag;
         using difference_type = std::iter_difference_t<typename list_t::const_iterator>;
@@ -63,9 +62,9 @@ class tri_list {
 
         tri_iterator() noexcept = default;
 
-        tri_iterator(const typename list_t::const_iterator &i, const fun_T1_ptr &T1_ptr, const fun_T2_ptr &T2_ptr,
-                     const fun_T3_ptr &T3_ptr) : it(i), T1_modifier_ptr(T1_ptr), T2_modifier_ptr(T2_ptr),
-                     T3_modifier_ptr(T3_ptr) {}
+        tri_iterator(const typename list_t::const_iterator &i, const fun_t1_ptr &T1_ptr, const fun_t2_ptr &T2_ptr,
+                     const fun_t3_ptr &T3_ptr) : it(i), T1_modifier_ptr(T1_ptr), T2_modifier_ptr(T2_ptr),
+                                                 T3_modifier_ptr(T3_ptr) {}
 
         bool operator==(const tri_iterator &other) const noexcept {
             return (this->it == other.it);
@@ -117,7 +116,6 @@ class tri_list {
     }
 
 public:
-
     tri_list() = default;
 
     tri_list(std::initializer_list<variant_t> list) : list(list) {}
@@ -125,22 +123,23 @@ public:
     template<class T>
     auto range_over() const {
         check_Ts_not_same<T>();
-        auto result = list
-            | std::views::filter([](variant_t element) {
-                return std::holds_alternative<T>(element);
-            })
-            | std::views::transform([](variant_t element) {
-                return std::get<T>(element);
-            });
 
-        if constexpr (std::is_same<T, T1>::value) {
-            return result | std::views::transform(*T1_modifier_ptr);
+        auto filtered = list | std::views::filter([](variant_t element) {
+            return std::holds_alternative<T>(element);
+        });
+
+        auto unpacked = filtered | std::views::transform([](variant_t element) {
+            return std::get<T>(element);
+        });
+
+        if constexpr (std::is_same_v<T, T1>) {
+            return unpacked | std::views::transform(*t1_modifier_ptr);
         }
-        else if constexpr (std::is_same<T, T2>::value) {
-            return result | std::views::transform(*T2_modifier_ptr);
+        else if constexpr (std::is_same_v<T, T2>) {
+            return unpacked | std::views::transform(*t2_modifier_ptr);
         }
         else {
-            return result | std::views::transform(*T3_modifier_ptr);
+            return unpacked | std::views::transform(*t3_modifier_ptr);
         }
     }
 
@@ -154,13 +153,13 @@ public:
     void reset() {
         check_Ts_not_same<T>();
         if (std::is_same_v<T, T1>) {
-            *T1_modifier_ptr = identity<T1>;
+            *t1_modifier_ptr = identity<T1>;
         }
         else if (std::is_same_v<T, T2>) {
-            *T2_modifier_ptr = identity<T2>;
+            *t2_modifier_ptr = identity<T2>;
         }
         else if (std::is_same_v<T, T3>) {
-            *T3_modifier_ptr = identity<T3>;
+            *t3_modifier_ptr = identity<T3>;
         }
     }
 
@@ -168,23 +167,22 @@ public:
     void modify_only(F f = F{}) {
         check_Ts_not_same<T>();
         if constexpr (std::is_same<T, T1>::value) {
-            *T1_modifier_ptr = compose<T>(f, *T1_modifier_ptr);
+            *t1_modifier_ptr = compose<T>(f, *t1_modifier_ptr);
         }
         else if constexpr (std::is_same<T, T2>::value) {
-            *T2_modifier_ptr = compose<T>(f, *T2_modifier_ptr);
+            *t2_modifier_ptr = compose<T>(f, *t2_modifier_ptr);
         }
         else if constexpr (std::is_same<T, T3>::value) {
-            *T3_modifier_ptr = compose<T>(f, *T3_modifier_ptr);
+            *t3_modifier_ptr = compose<T>(f, *t3_modifier_ptr);
         }
     }
 
     tri_iterator begin() const {
-//        const typename list_t::iterator &it = list.begin();
-        return tri_iterator(list.begin(), T1_modifier_ptr, T2_modifier_ptr, T3_modifier_ptr);
+        return tri_iterator(list.begin(), t1_modifier_ptr, t2_modifier_ptr, t3_modifier_ptr);
     }
 
     tri_iterator end() const {
-        return tri_iterator(list.end(), T1_modifier_ptr, T2_modifier_ptr, T3_modifier_ptr);
+        return tri_iterator(list.end(), t1_modifier_ptr, t2_modifier_ptr, t3_modifier_ptr);
     }
 };
 
